@@ -1,25 +1,16 @@
-# AnalyticsPipeline
-Real-time e-commerce analytics pipeline
-This is a build of a production-style pipeline. 
-
-### Project architecture and scope
+# End-to-end project: Real-time demand forecasting pipeline for rides in Singapore
+Build a production-style data engineering + ML system that ingests streaming trip events, computes features, trains and serves a forecasting model, and exposes predictions via an API—with orchestrated jobs, CI/CD, and observability.
+### Architecture and tech stack
 #### High-level components
-<li> Sources: Simulated e-commerce events (clicks, carts, purchases) and external APIs (currency rates).
-<li> Streaming ingestion: Kafka topics for each event type.
-<li> Data lake: S3 buckets for raw and curated layers.
-<li> Batch processing: Spark jobs for daily ETL and dimension builds.
-<li> Streaming processing: Kafka Streams or Flink for rolling aggregations.
-<li> Warehouse: Redshift or PostgreSQL with star schema.
+<li> Ingestion: Kafka to simulate trip events; batch CSV/Parquet for historical data.
+<li> Storage: S3 data lake;
+<li> Compute: Spark or PySpark for ETL; Pandas for exploration; dbt for transformations in the warehouse.
+<li> Orchestration: Airflow for DAGs (daily retrain, hourly feature refresh, model deploy).
+<li> Modeling: XGBoost or LightGBM for short-horizon demand; Prophet for seasonality baseline.
 <li> Orchestration: Airflow DAGs across batch jobs and checks.
-<li> Analytics: A dashboard for real-time sales and funnel metrics.
-<li> Ops: Docker, optional Kubernetes, CI/CD, data quality, monitoring.
-
-Milestones
-M1: Local dev environment + data generator + Kafka topics.
-M2: S3 raw layer + Spark batch job + schema.
-M3: Streaming aggregations + stateful windowing.
-M4: Warehouse load + BI dashboard.
-M5: Airflow orchestration + alerts + docs.
+<li> Serving: FastAPI service (Dockerized) exposing predict endpoint; Redis cache for hot features.
+<li> DevOps: GitHub Actions for tests and Docker build; IaC-lite with Docker Compose.
+<li> Observability: Prometheus + Grafana for system metrics; MLflow for experiment tracking and model registry.
 
 #### Environment setup
 ##### Core tooling
@@ -29,29 +20,14 @@ M5: Airflow orchestration + alerts + docs.
 <li> Infra as code: Terraform (optional) for AWS resources.
 
 ##### Repository structure
-<li><b>repo/</b>
-<li><b>infra/</b> Dockerfiles, Terraform
-<li><b>ingestion/</b> data generator, Kafka producers
-<li><b>streaming/</b> Kafka Streams or Flink jobs
-<li><b>batch/</b> Spark ETL jobs
-<li><b>orchestration/</b> Airflow DAGs and operators
-<li><b>warehouse/</b> DDL, dbt models (optional)
-<li><b>analytics/</b> dashboard assets
+<li><b>infra/</b> docker-compose.yml, service configs
+<li><b>etl/</b> Spark jobs, Great Expectations checks
+<li><b>ingestion/</b> event simulator, Kafka producer, schemas
+<li><b>features/</b> transformations, feature definitions, metadata
+<li><b>models/</b> training scripts, MLflow hooks, evaluation
+<li><b>orchestration/</b> Airflow DAGs, schedules
+<li><b>serving/</b> FastAPI app, model loader, Redis cache
+<li><b>dashboards/</b> Grafana configs, sample panels
 <li><b>tests/</b> unit/integration tests
-<li><b>docs/</b> architecture, runbooks
-
-##### Data design and schemas
-###### Event schemas (JSON)
-**Clicks**:
-Required: event_id, user_id, session_id, product_id, ts, page, referrer
-
-**Cart**:
-Required: event_id, user_id, session_id, product_id, quantity, ts
-
-**Purchase**:
-Required: event_id, user_id, session_id, items[], total_amount, currency, ts
-
-##### Dimensions and facts (star schema)
-<li> **Dimensions**: dim_user, dim_product, dim_time, dim_currency
-<li> **Facts**: fact_clicks, fact_cart, fact_orders
-<li> **Surrogate keys**: Use warehouse-generated IDs for dims; facts reference them.
+<li><b>notebooks/</b> EDA, prototyping
+README.md: architecture diagram, quickstart, results
